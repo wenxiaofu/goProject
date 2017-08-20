@@ -1,0 +1,26 @@
+package main
+
+import (
+	"Cserver"
+	"fmt"
+	"strconv"
+	"runtime"
+//	"time"
+)
+//var ch chan int = make(chan int)
+func foo(id int){
+	Cserver.Sendmassage(strconv.Itoa(id))
+	//当信道=15的时候，结束，防止主线程提前结束
+//	ch <- id
+}
+func main(){
+	count := 1000
+	for i := 0; i<count; i++{
+		foo(i)
+		fmt.Printf("dangqian thread ne %d \n",runtime.NumGoroutine())				
+	}
+//	for i := 0; i<count; i++{
+//		<- ch
+//	}
+//	time.Sleep(10000000000)
+}
