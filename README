@@ -1,3 +1,22 @@
 git add .
 git commit -m "test"
 git push -u origin master
+ git config --global user.name "wenxiaofu"
+ git config --global user.email "18627659723@163.com"
+ ssh-keygen -t rsa -C "18627659723@163.com"
+ 查看C:\Users\acc\.ssh\公钥文件
+git clone git@github.com:wenxiaofu/goproject.git
+
+sublime3 搭建go编译环境
+1 官网下载安装
+http://www.sublimetext.com/
+2 Ctrl+`
+输入下面内容，回车
+import urllib.request,os; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); open(os.path.join(ipp, pf), 'wb').write(urllib.request.urlopen( 'http://sublime.wbond.net/' + pf.replace(' ','%20')).read())
+3 Ctrl+shfit+p
+输入下面内容，回车
+Install Package
+再输入
+Gosublime
+
+Ctrl+b编译运行
