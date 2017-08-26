@@ -11,6 +11,7 @@ sublime3 搭建go编译环境
 1 官网下载安装
 http://www.sublimetext.com/
 2 Ctrl+`
+可以直接用tool下面的安装
 输入下面内容，回车
 import urllib.request,os; pf = 'Package Control.sublime-package'; ipp = sublime.installed_packages_path(); urllib.request.install_opener( urllib.request.build_opener( urllib.request.ProxyHandler()) ); open(os.path.join(ipp, pf), 'wb').write(urllib.request.urlopen( 'http://sublime.wbond.net/' + pf.replace(' ','%20')).read())
 3 Ctrl+shfit+p
@@ -20,3 +21,13 @@ Install Package
 Gosublime
 
 Ctrl+b编译运行
+
+go语言使用protobuf编程
+http://blog.csdn.net/easy_mind/article/details/52778793
+具体使用
+http://shanshanpt.github.io/2016/05/03/go-protobuf.html
+
+环境配置
+1 查看gopath中是否有protoc-gen-go.exe
+--go_out: protoc-gen-go: 文件名、目录名或卷标语法不正确。代表protoc-gen-go路径没有配置正确
+protoc.exe  --plugin=protoc-gen-go=E:\go\bin\protoc-gen-go.exe --go_out=. *.proto
