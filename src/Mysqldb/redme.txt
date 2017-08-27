@@ -1,0 +1,4 @@
+下载驱动
+go get github.com/go-sql-driver/mysql
+用户名和密码
+root  root
