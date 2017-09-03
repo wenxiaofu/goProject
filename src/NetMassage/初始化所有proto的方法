@@ -1,0 +1,11 @@
+1 通过反射给pb赋予默认值
+http://blog.csdn.net/qq317808023/article/details/50192897
+
+https://studygolang.com/articles/2185
+
+比较完整关于反射的文章
+http://blog.csdn.net/pkueecser/article/details/50422533
+2 反射一个包里面所有的struct，无法实现，可以遍历文件内容，使用正则表达式进行提取，提取到需要struct然后打印出来
+https://stackoverflow.com/questions/24118011/how-can-i-get-all-struct-under-a-package-in-golang
+
+3 怎么解决嵌套的情况，百度肯定没有

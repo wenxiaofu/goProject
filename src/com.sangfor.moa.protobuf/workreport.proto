@@ -1,0 +1,509 @@
+syntax = "proto2";
+import "attachment.proto";
+import "common.proto";
+package com.sangfor.moa.protobuf;
+
+// 工作汇报类型
+enum PB_Type
+{
+	DAILY = 0;
+	WEEKLY = 1;
+	MONTHLY = 2;
+}
+
+message PB_WorkReport
+{
+	optional int64 work_report_id = 1;                             // 工作汇报ID， 唯一标识一个工作汇报，全局唯一。创建时工作汇报可以任意填写，创建成功之后返回服务端生成的ID。
+	optional string content = 2;                               	 // 工作汇报内容，原则上不许为空
+	repeated PB_Attachment attrs = 3;               	   		// 工作汇报带有附件， 比如图片, 请按照PB_Attachment的标准要求填写
+	optional int32 type = 4;									//创建工作汇报的类型
+	optional int64 wrdate = 5;									//日志时间(非创建时间,由客户端填写)
+	optional int32 version = 6;                                 //版本号
+    repeated PB_Form forms = 7;                             //表单
+    
+	optional int64 create_pid = 20;	                			// 创建人pid
+	optional int64 gid = 21;	                			// 创建人gid,有权限的人查看，会根据部门筛选
+	optional int64 create_time = 22;						//创建工作汇报的时间
+    optional int64 modify_pid = 23;	                			// 修改人pid
+	optional int64 modify_time = 24;						//工作汇报的修改时间
+    
+}
+
+enum PB_Status
+{
+	UNREAD = 0;
+	READ = 1;
+	ADDED = 2;
+}
+
+message PB_WRReadStatus
+{
+	optional int64 did = 1;
+	optional int64 pid = 2;
+	optional int32 type = 3;				//读的工作汇报类型
+	optional int64 wrdate = 4;				//读的工作汇报日期
+	optional int32 read_status = 5;			//这日期下工作汇报的状态
+	optional int64 read_time = 6;			//记录上次读此日期工作汇报的时间
+}
+
+//创建工作汇报
+message PB_WRCreateWorkReportReq 
+{
+	optional PB_WorkReport workreport = 1;
+}
+message PB_WRCreateWorkReportRsp 
+{
+	optional int32 result = 1 [default=0];
+	optional int64 work_report_id = 2;					//返回新建的ID
+    optional int32 version = 3;					        //返回新建的版本号
+}
+
+//获取单个工作汇报
+message PB_WRGetWorkReportReq 
+{
+	optional int64 work_report_id = 1;
+}
+
+message PB_WRGetWorkReportRsp 
+{
+	optional int32 result = 1 [default=0];
+	optional PB_WorkReport workreport = 2;
+}
+
+//通过work_report_id获取多个工作汇报
+message PB_WRGetWorkReportListIdReq 
+{
+	repeated int64 wr_ids = 1; //工作汇报id
+}
+message PB_WRGetWorkReportListIdRsp 
+{
+	optional int32 result = 1 [default=0];
+	repeated PB_WorkReport workreports = 2;
+}
+
+//获取个人创建的工作汇报列表
+message PB_WRGetWorkReportsReq
+{
+	optional int64 count = 1[default = 10];
+	optional int64 start_id = 2;
+	repeated PB_WorkReport locals = 3;
+}
+
+message PB_WRGetWorkReportsRsp 
+{
+	optional int32 result = 1 [default=0];
+	repeated PB_WorkReport workreports = 2;
+	repeated int64 dels = 3;
+}
+
+
+//获取我有权限查看工作汇报的人数
+message PB_WRGetManagementWorkReportsNumReq 
+{
+	optional int32 type = 1; 						//获取工作汇报总数的类型
+	optional int64 count = 2;						//获取多少天的数据
+	optional int64 start_date = 3;					//从哪一天开始获取数据，填0，拉去最新的
+	optional int32 isreport = 4;					//是否是来自工作汇报报表 报表请求的数据不管当天是否有人创建都要 0 表示不是来自报表
+}
+message PB_WRGetManagementWorkReportsNumRsp 
+{
+	optional int32 result = 1 [default=0];
+	message PB_Record
+	{
+		optional int64 date = 1;		//某天的0时0分0秒的格林威治时间
+		optional int64 count = 2;			//当天有多少人写工作汇报
+		optional int32 read_status = 3;		//当天的工作汇报是否已读过
+		optional int64 read_time = 4;		//上次读过的时间，未读则不填
+	}
+	repeated PB_Record records = 2;
+}
+
+//获取我有权限查看的工作汇报列表
+message PB_WRGetManagementWorkReportListReq
+{
+	optional int32 type = 1;									//工作汇报的类型
+	optional int64 wrdate = 2;									//日志时间(非创建时间,由客户端填写)
+	optional int32 count = 3[default = 15];						//获取工作汇报的个数
+	optional int64 start_id = 4;								//从哪个start_id(工作汇报创建时间点)往后查看(不赋值表明查看最新的开始)
+	repeated int64 gids = 5;									//用来筛选部门，不填，默认下发所有可以查看的部门
+    optional int32 skip = 6;						            //从第几个开始拉取数据，web用
+	repeated int64 pids = 7;									//用来筛选人，不填默认下发所有可以看的人
+}
+message PB_WRGetManagementWorkReportListRsp 
+{
+	optional int32 result = 1 [default=0];
+	repeated PB_WorkReport workreports = 2;
+    optional int32 total_workreports = 3;                       //下发给web，用来做分页用
+}
+//获取我有权限查看部门工作汇报的人数
+message PB_WRGetManagementGroupWorkReportsNumReq 
+{
+	optional int32 type = 1;									//工作汇报的类型
+	optional int64 wrdate = 2;									//日志时间(非创建时间,由客户端填写)
+}
+message PB_WRGetManagementGroupWorkReportsNumRsp {
+	optional int32 result = 1 [default=0];
+	message PB_GroupStatic
+	{
+		optional int64 gid = 1;
+		optional int64 count = 2;						//该组当天有多少人提交工作汇报
+	}
+	repeated PB_GroupStatic group_stats = 2;
+}
+
+//删除工作汇报请求
+message PB_WRDelWorkReportsReq
+{
+	repeated int64 work_report_ids = 1;
+}
+
+message PB_WRDelWorkReportsRsp
+{
+    optional int32 result = 1 [default=0];              // 成功(>=0)  失败(错误号<0)
+    message PB_DelFail 
+    {
+        optional int32 result = 2;						// 错误号<0
+		optional int64 work_report_id = 1;			   // 删除失败的任务
+	}
+	repeated PB_DelFail fails = 2;	
+}
+
+//修改工作汇报
+message PB_WRModifyWorkReportReq 
+{
+    optional PB_WorkReport workreport = 1;
+}
+message PB_WRModifyWorkReportRsp 
+{
+    optional int32 result = 1 [default=0];
+    optional int32 version = 2;                         // 返回任务在系统中版本号
+}
+//统计有权限查看的人在一段时间内提交多少天工作汇报
+message PB_PersonStatistics
+{
+    optional int64 pid = 1;		   //此人的id
+    repeated int64 wrdates = 2;    //此人在这段时间内有多少天提交工作汇报
+}
+message PB_WRGetManagementPeriodTimeStatisticsReq
+{
+    optional int32 type = 1;						//工作汇报的类型
+    optional int64 start_date = 2;					//从哪一天开始获取数据
+    optional int64 end_date = 3;					//到哪一天结束
+    optional int64 count = 4;					//获取多少个
+    repeated int64 gids = 5;		                //查看指定部门提交情况，不填则获取全部
+    repeated PB_PersonStatistics locals = 6;        //上传本地数据，用来和最新数据做对比
+}
+message PB_WRGetManagementPeriodTimeStatisticsRsp
+{
+    optional int32 result = 1 [default=0];
+    optional int64 total_workreports = 2;           //这段时间内提交总共工作汇报
+    optional int64 total_person = 3;           //这段时间内提交总共工作汇报人数
+    repeated PB_PersonStatistics person_statisticses = 4; 
+}
+
+//获取一时间内我有权限查看部门工作汇报的人数
+message PB_WRGetManagementPeriodTimeGroupWorkReportsNumReq 
+{
+	optional int32 type = 1;									//工作汇报的类型
+    optional int64 start_date = 2;					//从哪一天开始获取数据
+    optional int64 end_date = 3;					//到哪一天结束
+}
+message PB_WRGetManagementPeriodTimeGroupWorkReportsNumRsp {
+	optional int32 result = 1 [default=0];
+	message PB_GroupStatic
+	{
+		optional int64 gid = 1;
+		optional int64 count = 2;						//该组这段时间内有多少人提交工作汇报
+	}
+	repeated PB_GroupStatic group_stats = 2;
+}
+
+
+//获取我有权限查看部门提交和为提交工作汇报人数
+message PB_WRGetManagementGroupWorkReportsStatisticsReq 
+{
+	optional int32 type = 1;									//工作汇报的类型
+	optional int64 wrdate = 2;									//日志时间(非创建时间,由客户端填写)
+}
+message PB_WRGetManagementGroupWorkReportsStatisticsRsp {
+	optional int32 result = 1 [default=0];
+	message PB_GroupStatistics
+	{
+		optional int64 gid = 1;
+		optional int64 submit_person_count = 2;						//该部门当天有多少人提交工作汇报
+        optional int64 unsubmit_person_count = 3;						//该部门当天有多少人未提交工作汇报
+		repeated int64 pids = 4;									//指定查看的人，此字段与gids互斥，  2016-3-25
+	}
+	repeated PB_GroupStatistics group_statistics = 2;
+}
+
+//获取我有权限查看部门提交和为提交工作汇报人数详情
+enum PB_SubmitType
+{
+	SUBMIT = 0;
+	UNSUBMIT = 1;
+}
+
+message PB_WRGetManagementGroupWorkReportsStatisticsDetailReq
+{
+	optional int32 type = 1;									//工作汇报的类型
+	optional int64 wrdate = 2;									//日志时间(非创建时间,由客户端填写)
+    optional int32 submit_type = 3;                             //表示获取筛选是提交还是为提交
+    repeated int64 gids = 4;									//用来筛选部门，查看指定部门提交和未提交的详情
+    optional int64 count = 5;                                   //获取多少人的
+    repeated int64 local_pids = 6;							    //本地已经下发多少人了，
+    optional int64 skip = 7;                                   //从第几个人开始的 2015-8-11，从新需求开始启用这个字段，如果没填这个字段，表示是老版本的老逻辑，
+	repeated int64 pids = 8;							    	//指定查看的人，此字段与gids互斥，  2016-3-25
+}
+message PB_PersonWrCreateTime
+{
+    optional int64 pid = 1;
+    repeated int64 create_time = 2;                     //工作汇报的创建时间
+}
+message PB_WRGetManagementGroupWorkReportsStatisticsDetailRsp
+{
+    optional int32 result = 1 [default=0];
+    message PB_GroupPerson
+	{
+		optional int64 gid = 1;
+        repeated int64 pids = 2;                                         //由于新需求需要按这个人创建的工作汇报创建时间排序，so从新需求开始启用pid_wr_create_times字段
+        repeated PB_PersonWrCreateTime pid_wr_create_times = 3;          //2015-8-11
+	}
+    repeated PB_GroupPerson pgps = 2;
+    optional int64 total_person = 3;           //这个日期提交或未提交工作汇报人数    
+}
+//获取个人一段时间内，哪些天创建了工作汇报
+message PB_WRGetManagementPeriodTimeDateReq
+{
+    optional int64 pid = 1;  
+    optional int32 type = 2;									//工作汇报的类型
+    optional int64 start_date = 3;					//从哪一天开始获取数据
+    optional int64 end_date = 4;					//到哪一天结束
+}
+
+message PB_WRGetManagementPeriodTimeDateRsp
+{
+    optional int32 result = 1 [default=0];
+    repeated int64 wrdates = 2;    //此人在这段时间内有多少天提交工作汇报
+}
+
+//获取个人一段时间内，那些天创建了哪些工作汇报
+message PB_WRGetManagementPeriodTimeWorkReportsReq
+{
+    optional int64 pid = 1;  
+    optional int32 type = 2;									//工作汇报的类型
+    optional int64 start_date = 3;					//从哪一天开始获取数据
+    optional int64 end_date = 4;					//到哪一天结束
+}
+
+message PB_WRGetManagementPeriodTimeWorkReportsRsp
+{
+    optional int32 result = 1 [default=0];
+    repeated PB_WorkReport workreports = 2;
+}
+
+message PB_FormModel
+{
+    optional int64 doing = 1;			//0 关闭  1 打开
+    optional int64 did = 2;             //公司编号 
+    optional int32 type =  3;           //工作汇报类型
+    optional int32 version =  4;        //定义模版的版本号
+    repeated string form_model_contents =  5; //表单模版
+}
+
+message PB_WRSetFormModelReq
+{
+    optional PB_FormModel form_model = 1;
+}
+message PB_WRSetFormModelRsp
+{
+    optional int32 result = 1 [default=0];
+    optional int32 version = 2;
+}
+
+message PB_WRGetFormModelReq
+{
+    repeated PB_FormModel form_model = 1;           //客户端必须上报type 和 version
+    optional int32 flag = 2;                        //此处为特殊字段，用来规避ios传错字段，获取不到工作汇报模版的bug
+}
+message PB_WRGetFormModelRsp
+{
+    optional int32 result = 1 [default=0];
+    repeated PB_FormModel form_model = 2;
+}
+
+message PB_WRFormModelPush
+{
+    optional PB_FormModel form_model = 2;                               //  必须填写的字段
+}
+//------------------web--------------------
+
+//获取个人创建的工作汇报列表
+message PB_WRWebGetWorkReportsReq
+{
+	optional int64 count = 1[default = 10];
+	optional int64 start = 2;                   //从多少条开始
+    optional int64 pid = 3;                     
+}
+
+message PB_WRWebGetWorkReportsRsp 
+{
+	optional int32 result = 1 [default=0];
+	repeated PB_WorkReport workreports = 2;
+	optional int64 total = 3;               //返回个人创建工作汇报总数，web用
+}
+
+
+//获取我有权限查看工作汇报的人数
+message PB_WRWebGetManagementWorkReportsNumReq 
+{
+	optional int32 type = 1; 						//获取工作汇报总数的类型
+	optional int64 start_date = 2;					//从哪一天开始获取数据，填0，拉去最新的
+    optional int64 end_date = 3;					//web用，从start_date（填0，拉去最新的）到end_date结束
+}
+message PB_WRWebGetManagementWorkReportsNumRsp 
+{
+	optional int32 result = 1 [default=0];
+	message PB_Record
+	{
+		optional int64 date = 1;		//某天的0时0分0秒的格林威治时间
+		optional int64 count = 2;			//当天有多少人写工作汇报
+		optional int32 read_status = 3;		//当天的工作汇报是否已读过
+		optional int64 read_time = 4;		//上次读过的时间，未读则不填
+	}
+	repeated PB_Record records = 2;
+    optional int64 fist_date = 3;          //有权限查看最早的一天
+}
+//工作汇报导出
+message PB_WRExportWorkReportsReq
+{
+    repeated int32 types = 1; 						//获取工作汇报总数的类型
+    repeated int64 gids = 2;                      //按照部门导出工作汇报
+    repeated int64 pids = 3;                      //按照成员导出工作汇报,gids和pids都不填，就导出全部
+    optional int64 start_date = 4;                  //导出工作汇报开始时间
+    optional int64 end_date = 5;                    //导出工作汇报结束时间
+	optional int64 limit = 6;                    //导出多少条工作汇报
+	optional int64 skip = 7;                    //从哪一条开始导出多少条工作汇报
+}
+message PB_WRExportWorkReportsRsp 
+{
+	optional int32 result = 1 [default=0];
+	repeated PB_WorkReport workreports = 2;
+}
+//计算到目前为止创建多少工作汇报，此接口如果did没有数据，在返回中没有返回，以后有需求再改
+message PB_WRWorkReportCountReq
+{
+	repeated int64 dids = 1;
+}
+message PB_WRWorkReportCountRsp
+{
+	optional int32 result = 1 [default=0];
+	message PB_WRDidCount
+	{
+		optional int64 did = 1;
+		optional int64 cnt = 2;
+	}
+	repeated PB_WRDidCount did_cnts = 2;
+}
+
+
+//【搜索汇报内容】
+message PB_WRSearchReq {
+	optional int64 did = 1;								//客户端不填
+	optional int64 pid = 2;								//客户端不填
+	
+	optional string keyword = 3;
+	optional int32 count = 4[default=15];
+	optional int64 prev_wrdate = 5;
+	optional int64 prev_wrid = 6;						//同一天(wrdate)会存在多个汇报,一天内的汇报再以wrid排序
+}
+message PB_WRSearchRsp {
+	optional int32 result = 1 [default=0];
+	
+	repeated PB_WorkReport wrs = 2;
+	optional bool end = 3[default=false];				//true-已搜索到最后(无更多数据了,客户端停止下拉)
+}
+//【汇报聚合内容】
+enum PB_AggagretionInfo
+{
+	WR_CUS_TALK = 1;
+	WR_CUS_VISIT = 2;
+	WR_SC_FOLLOW = 4;
+	WR_CUS_COUNT = 8;
+	WR_SC_COUNT = 16;
+	WR_AGG_ALL = 31;
+}
+message PB_WRSetAggagretionInfoReq
+{
+	optional int64 aggagretion_info = 1;//PB_AggagretionInfo
+}
+message PB_WRSetAggagretionInfoRsp
+{
+	optional int32 result = 1 [default=0];
+}
+message PB_WRGetAggagretionInfoReq
+{
+}
+message PB_WRGetAggagretionInfoRsp
+{
+	optional int32 result = 1 [default=0];
+	optional int64 aggagretion_info = 2;
+}
+message PB_WRAggagretionPush
+{
+	optional int64 aggagretion_info = 1;
+}
+
+//工会汇报订阅号
+enum PB_WRNotifyType
+{
+	unreply = 0;//未点评
+	replyed = 1;//已点评
+	all = 2;//全部
+}
+message PB_WRNotifyGetListReq
+{
+	optional int32 type = 1;//PB_WRNotifyType
+	optional int64 start_id = 2 [default=0];//从那个工作汇报id开始获取,不填拉取最新的
+	optional int32 count = 3 [default=10];//拉取的数量
+	optional int32 skip = 4;//网页端使用
+	repeated int64 gids = 5; //过滤gid  不填 获取自己权限之内的
+	repeated int64 pids = 6; //过滤pid 不填获取自己权限之内的
+	message PB_WRNotifyLocals
+	{
+		optional int64 wrid = 1; //本地工作汇报id
+		optional int64 wrver = 2; //本地工作汇报版本号 
+	}
+	repeated PB_WRNotifyLocals locals = 7;
+	
+}
+message PB_WRNotifyGetListRsp
+{
+	optional int32 type = 1;//PB_WRNotifyType
+	optional int64 last_id = 2;	//已读的最大workreport_id <=last_id 表示已读
+	repeated PB_WorkReport wrs = 3;
+	optional int32 result = 4 [default = 0];
+	repeated int64 dels = 5;//已经删除的工作汇报
+}
+
+message PB_WRNotifySetReplyReq
+{
+	optional int64 workreport_id = 1; //工作汇报id
+	optional int32 reply_status = 2; //回复状态
+}
+message PB_WRNotifySetReplyRsp
+{
+	optional int32 result = 1[default = 0];
+}
+message PB_WRNotifySetLookReq
+{
+	optional int64 workreport_id = 1;//汇报id,当前看过的最大id
+}
+message PB_WRNotifySetLookRsp
+{
+	optional int32 result = 1[default = 0];
+}
+
+
+
+

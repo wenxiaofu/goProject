@@ -3,10 +3,11 @@ package main
 
 import (
 	//t "./test"
+	"com.sangfor.moa.protobuf"
 	"encoding/json" //转换成json需要
 	"fmt"
 	"github.com/golang/protobuf/proto"
-	"protos"
+	"reflect"
 )
 
 //func ListName(stu interface()) map[string]string
@@ -35,11 +36,13 @@ func main() {
 	fmt.Println(string(jsons)) //byte[]转换成string 输出
 
 	// 创建一个对象, 并填充字段, 可以使用proto中的类型函数来处理例如Int32(XXX)
-	hw := protos.MyMsg{
+	//	var hw proto.Message
+	hw := com_sangfor_moa_protobuf.MyMsg{
 		Id:  proto.Int32(1),
 		Str: proto.String("iyviasbjasdv"),
 		Opt: proto.Int32(2),
 	}
+	fmt.Print("dddddddddd-------%s", reflect.TypeOf(hw))
 	//将数据转换成json格式
 	jsonM, errs := json.Marshal(hw)
 	if errs != nil {
@@ -56,7 +59,7 @@ func main() {
 	}
 	fmt.Println(string(mData)) //byte[]转换成string 输出
 	// 下面进行解码, 注意参数
-	var umData protos.MyMsg
+	var umData com_sangfor_moa_protobuf.MyMsg
 	err = proto.Unmarshal(mData, &umData)
 
 	if err != nil {

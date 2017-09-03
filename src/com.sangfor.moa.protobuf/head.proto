@@ -1,0 +1,6 @@
+syntax = "proto2";
+package com.sangfor.moa.protobuf;
+ message head
+ {
+    required int32     srvop = 1;   // servop
+ }

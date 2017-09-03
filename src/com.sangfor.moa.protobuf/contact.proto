@@ -1,0 +1,320 @@
+syntax = "proto2";
+import "attachment.proto";
+
+package com.sangfor.moa.protobuf;
+
+enum PB_PidType {
+    PID_PERSONAL = 0;       //  个人帐号
+    PID_PUBLIC = 1;         //  公众帐号
+    PID_ADMIN = 2;          //  管理员帐号
+	PID_SUBSCRIPTION = 3;	//订阅号
+	PID_SUBTABLE = 4;		//订阅号报表类型
+}
+
+enum PB_Sex {
+    MALE = 0;
+    FEMALE = 1;
+}
+
+message PB_PhoneNumber {
+/*座机是WORK,其他都是手机*/
+    enum PhoneType {
+        MOBILE = 0;
+        HOME = 1;
+        WORK = 2;
+        OFTEN = 3;
+    }
+    optional PhoneType type = 1 [default = MOBILE];
+    required string number = 2;
+}
+
+message PB_MailInfo {
+    enum MailType {
+        OFTEN = 0;
+        WORK = 1;
+        PERSON = 2;
+    }
+    optional MailType type = 1 [default = WORK];
+    required string mail = 2;
+}
+
+enum PB_PersonStatus {
+    INIT = 0;                   //  初始状态，用户还没有认证
+    AUTHED = 1;                 //  用户已经认证，但还没完善个人资料
+    ONWORK = 2;                 //  在职或者工作中
+    UNWORK = 3;                 //  休假或者非工作中
+    LEAVE = 4;                  //  离职
+}
+
+message PB_PersonExtendData {
+    required string name = 1;
+    optional bytes data = 2;
+//  optional string key = 3;  //modify zzl 2015/9/16 这个字段确认php并没有继续使用了，注释掉
+}
+
+message PB_Department
+{
+	required int64 gid = 1;
+	optional string name = 2;
+}
+
+//联系人
+message PB_Person {
+    required int64 pid = 1;                                 //用户ID
+    optional PB_PidType ptype = 2 [default=PID_PERSONAL];//账户类型
+    optional string name = 3;                               //名字。若是公众帐号时为公众帐号名
+    optional string login_account = 4;                      //登录账号
+    optional PB_Sex sex = 5;                                //性别。
+    optional PB_Attachment photo = 6;                       //照片
+    optional string position = 7;                           //职位。
+    repeated PB_PhoneNumber phones = 8;                    //电话
+    repeated PB_MailInfo mails = 9;                        //邮箱
+	repeated string sa_word = 10;                           //search assist word.用于搜索时辅助的内容（如简拼字母）
+    optional PB_PersonStatus status = 11;                   //更换工作状态
+    optional string change_status_reason = 12;              //更换状态的理由
+    optional string address = 13;                           //地址字段
+    optional int64 create_time = 14;                        //创建时间
+    optional int64 activate_time = 15;                      //激活绑定的时间
+	optional int64 entry_time = 16;                         //入职时间
+	repeated PB_Department departments = 17;				//部门信息，目前只支持1个部门，所以只会考虑第一个
+	optional int64 leave_time = 18;							//离职时间
+	optional int32 auto_wa_status = 19;						//自动考勤状态
+    optional string employee_id = 20;                       //工号
+    optional int32 web_notify_type = 21;                    //web 登陆后，手机的推送选项
+    optional int32 hide_account = 22;                       // 是否隐藏账号, 为1 的时候隐藏
+    
+    optional uint32 udversion = 41;                         //自身信息被修改的版本号，用以同步。
+	repeated PB_PersonExtendData  extends = 43;             //扩展属性,zzl modify 2015/9/8 【P4.1】隐私信息需求改动
+	optional bytes password = 46;                           // 帐号密码,客户端先忽略掉,临时方案
+}
+
+/* 用户控制类型 */
+enum PB_PersonContralType {
+	PCT_PART = 0;
+	PCT_ALL = 1;
+}
+/*用户控制结构， tag 设置且不为0的时候生效，PCT_ALL的时候设置为不返回
+   PCT_PART的时候设置为返回，群组控制同理*/
+message PB_PersonContral {
+	required PB_PersonContralType op = 1;
+	optional bool ptype = 2;								//账户类型
+    optional bool name = 3;                               	//名字。若是公众帐号时为公众帐号名
+    optional bool login_account = 4;                     	//登录账号
+    optional bool sex = 5;                                	//性别。
+    optional bool photo = 6;                       			//照片
+    optional bool position = 7;                           	//职位。
+    optional bool phones = 8;                    			//电话
+    optional bool mails = 9;                        		//邮箱
+	optional bool sa_word = 10;                           	//search assist word.用于搜索时辅助的内容（如简拼字母）
+    optional bool status = 11;                   			//更换工作状态
+    optional bool change_status_reason = 12;              	//更换状态的理由
+    optional bool address = 13;                           	//地址字段
+    optional bool create_time = 14;                        	//创建时间
+    optional bool activate_time = 15;                      	//激活绑定的时间
+	optional bool entry_time = 16;                        	 //入职时间
+	optional bool departments = 17;							// 部门信息
+	optional bool leave_time = 18;							//离职时间
+	optional bool auto_wa_status = 19;						//自动考勤
+    optional bool employee_id = 20;                       //工号
+    optional bool web_notify_type = 21;                     //web 登陆后，手机的推送选项
+    optional bool hide_account = 22;                        // 是否隐藏账号, 为1 的时候隐藏
+    
+    optional bool udversion = 41;                         //自身信息被修改的版本号，用以同步。
+	
+//	optional bool did = 42;
+    optional bool extends = 43;                         //zzl modify 2015/9/8 【P4.1】隐私信息需求改动,开放给客户端
+//srv	optional bool favorites = 44;
+//srv	optional bool inv_favorites = 45;
+//srv	optional bool password  = 46;							//初始密码
+//srv	optional bool gids = 47;
+//srv	optional bool ppis = 48;
+}
+
+//群组类型
+enum PB_GroupType{
+    GT_CUSTOM = 0;              //  私密小组
+    GT_OFFICIAL = 1;            //  公开小组
+    GT_ORGAN = 2;               //  组织架构
+    GT_CHAT = 3;                //  临时聊天组
+    GT_JOB_RELATED = 4;         //  与工作关联的讨论组
+}
+//群组结构
+message PB_Group {
+    required int64 gid = 1;                                 //  组ID(ID=0 保留)
+    optional PB_GroupType gtype = 2 [default = GT_CUSTOM];  //  群组类型
+    optional string name = 3;                               //  组名
+    optional int64 owner_pid = 4;                           //  群主ID， ogran没有
+    optional PB_Attachment photo = 5;                		//  照片
+    optional int64 create_time = 6;                         //  创建时间
+    optional string address = 7;                            //  地址字段
+	optional int64 department_gid = 8;						//  父部门
+	optional int64 person_cnt = 9;							//  群组人员数量
+	optional int64 group_cnt = 10;							//  群组部门数量
+	optional string related_info = 11;						//  群组关联信息(比如群组属于通知,则可置为{"notify":id})
+
+	
+    //  预留20个字段供后续扩展字段插入
+    optional uint32 udversion = 41;                         //  群组资料版本号
+    repeated int64 pids = 43;								//  如果群组为部门的时候，成员的有序序列
+	repeated int64 gids = 44;								//  如果群组为部门的时候，成员组的有序序列
+}
+
+/* 群组控制类型 */
+enum PB_GroupContralType {
+	GCT_PART = 0;
+	GCT_ALL = 1;
+	
+}
+/*  群组控制结构 */
+message PB_GroupContral {
+	required PB_GroupContralType op = 1;					//	类型
+    optional bool gtype = 2 ;  								//  群组类型
+    optional bool name = 3;                              	 //  组名
+    optional bool owner_pid = 4;                           //  群主ID， ogran没有
+    optional bool photo = 5;                				//  照片
+    optional bool create_time = 6;                         //  创建时间
+    optional bool address = 7;                            //  地址字段
+	optional bool department_gid = 8;						//  父部门
+	optional bool person_cnt = 9;							//  群组人员数量
+	optional bool group_cnt = 10;							//  群组部门数量
+	optional bool related_info = 11;						//  群组关联信息
+
+	
+    optional bool udversion = 41;                       	//  群组资料版本号
+//	optional bool did = 42;
+    optional bool pids = 43;                                //  如果群组为部门的时候，成员的有序序列
+    optional bool gids = 44;                                //  如果群组为部门的时候，成员组的有序序列
+//srv	optional bool gm = 45;
+}
+
+/*群组消息的通知状态 */
+enum PB_GroupNotifyType {
+    GNT_PUSH = 0;
+    GNT_NO_PUSH = 1;
+}
+
+/* person 和 group 的公有属性  */
+message PB_PersonGroupInfo {
+	required int64 pid = 1;
+	required int64 gid = 2;
+	optional PB_GroupNotifyType gnt = 3;   //群组通知状态
+	optional int64 join_time = 4;		   //加入时间
+	
+	optional int32 udversion = 20;
+}
+
+/* 群组控制类型 */
+enum PB_PersonGroupInfoContralType {
+	PGICT_PART = 0;
+	PGICT_ALL = 1;
+}
+
+message PB_PersonGroupInfoContral {
+	required PB_PersonGroupInfoContralType op = 1;
+	optional bool gnt = 3;
+	optional bool join_time = 4;
+	
+	optional bool udversion = 20;
+//  optional bool did = 21;
+}
+
+/* 消息通知类型, 添加一个新的枚举主要是为了后续替换群组的gnt，统一用这一个状态，而且群组gnt后续换成int的类型传递这样*/
+enum PB_MessageNotifyType {
+    MNT_PUSH = 0;
+    MNT_NO_PUSH = 1;
+}
+/* person 和 person 的共有属性*/
+/* 没有这个信息的时候默认为MNT_PUSH */
+message PB_PersonPersonInfo
+{
+    optional int64 pid = 1;      // 主pid,optional的字段主要是客户端上报的时候不是必须携带
+    optional int64 a_pid = 2;    // 被关联的id，主要是客户端上报的某些情况不是必须携带
+    optional int32 notify_type = 3;   // 通知类型,用int是为了好兼容,客户端最好在碰到不认识字段的时候有一个默认字段，
+                                    //其实更好的是，服务端每个服务都知道当前服务的客户端版本号，根据客户端版本号来查看
+    
+    optional int32 udversion = 15; // 版本信息
+}
+
+enum PB_PersonPersonInfoContralType
+{
+    PPICT_PART = 0;
+    PPICT_ALL = 1;
+}
+message PB_PersonPersonInfoContral
+{
+    required PB_PersonPersonInfoContralType op = 1;      // 操作类型
+    optional bool notify_type = 3;   // 通知类型
+    
+    optional bool udversion = 15; // 版本信息
+}
+
+
+// 域的结构，不排除后面会添加，公司联系人等信息，方便我们这边管理
+message PB_Domain {                                         
+    required int64 did = 1;                                     //  域id
+    required string name = 2;                                   //  域名
+    optional string ip = 3;
+    optional int64 port = 4;   //服务器id
+    
+    optional int32 udversion = 15;
+}
+
+enum PB_DomainSetContralType
+{
+    PDSCT_PART = 0;
+    PDSCT_ALL = 1;
+}
+
+enum PB_PersonDataStatusType
+{
+    PDST_BASIC = 0;   /*基本属性*/
+    PDST_EXTEND = 1;  /*扩展属性*/
+    PDST_CUSTOM_BASIC = 2; /*自定义基本属性*/
+    PDST_CUSTOM_EXTEND = 3;/*自定义扩展属性*/
+}
+
+message PB_PersonDataStatusDetail
+{    
+    optional string key = 1; /* key的名字，如果是隐私类型会和扩展属性的 key匹配*/
+    optional int32  type = 2; /* 字段的类型*/
+    optional int32  hide = 3; /* 是否隐藏 0表示显示，1表示隐藏*/
+    optional string show_name = 4; /* 实际显示名字,如果为空则，则为key*/
+    optional int32  check = 5; /* web的列表显示这一列的逻辑 0 表示没有这一列，1表示有这一列*/
+}
+
+message PB_PersonDataStatus
+{/* add zzl 2016/09/18 在纠结了1个小时之后，在考虑要不要独立出来，扩展更好，最后还是不独立出来 */
+    repeated PB_PersonDataStatusDetail details = 1;
+//srv    optional int32  key_alloc = 2; /* 分配器,用于分配key，防止web提交的key冲突问题 */
+}
+
+message PB_DomainSet {
+//暂时不要这个 optional int64 did = 1;
+    optional int32 hide_account = 2;  // 是否隐藏账号, 为1 的时候隐藏
+    optional int32 export_customer = 3;   //是否允许员工导出自己跟进的客户，为1的时候允许，为0的是否不允许
+    optional int32 export_salechance = 4;  //是否允许员工导出自己跟进的销售机会，为1的时候允许，为0的时候不允许
+	optional int32 export_workflow = 5;  //是否允许员工导出自己流程，为1的时候允许，为0的时候不允许
+    optional int32 export_workreport = 6;  //是否允许员工导出自己工作汇报，为1的时候允许，为0的时候不允许
+	optional int32 export_legwork = 7;  //是否允许员工导出自己客户拜访，为1的时候允许，为0的时候不允许
+    optional int32 vip = 8;         //公司vip，0表示是非vip，1表示vip，后续可能改变vip的级别
+    optional PB_PersonDataStatus pds = 9; /* 用户字段标签*/
+    optional string organization = 12; /* 组织*/
+	
+    optional int32 udversion = 10;
+//srv optional int32 refuse_sms = 11;  //服务端自己使用，是否拒绝这个公司发短信
+}
+
+message PB_DomainSetContral {
+    required int32 op = 1;   //part or all
+    optional int32 hide_account = 2;   /* 这里不用bool了，但是目前还是只是支持0/1, 其实都一样的空间，但是貌似int会扩展好一点*/
+    optional int32 export_customer = 3;   
+    optional int32 export_salechance = 4; 
+	optional int32 export_workflow = 5;  //是否允许员工导出自己流程，为1的时候允许，为0的时候不允许
+    optional int32 export_workreport = 6;  //是否允许员工导出自己工作汇报，为1的时候允许，为0的时候不允许
+	optional int32 export_legwork = 7;  //是否允许员工导出自己客户拜访，为1的时候允许，为0的时候不允许
+    optional int32 vip = 8;         //公司vip，0表示是非vip，1表示vip，后续可能改变vip的级别
+    optional int32 pds = 9; /* 用户字段标签*/
+    optional int32 organization = 12; /* 组织*/
+    
+	optional int32 udversion = 10;
+}

@@ -1,0 +1,42 @@
+syntax = "proto2";
+package com.sangfor.moa.protobuf;
+
+message PB_ModMsgId				//	模块标识，每个模块都可以在消息中增加自己的标识。若消息有回复，则会在回复中携带上模块标识(只可设置自己的区域，如手机端只可设置client_id)
+{
+	optional uint64 client_req_id = 1;		//	客户端的标识
+	optional uint64 disp_req_id = 2;		//	调度器的标识
+	optional uint64 workflow_req_id = 7;	//	工作量模块的标识
+	optional uint64 servermap_req_id = 14;
+	optional uint64 notify_req_id = 17;		//	新通知模块的标识
+	optional uint64 file_req_id = 18;
+	optional uint64 srvrpc_req_id = 19;		// rpc的标识
+	optional uint64 entry_req_id = 20;		// entry的标识
+	optional uint64 workflowdisp_req_id = 21;	// workflowdisp的标识
+	optional uint64 mtunnel_req_id = 22;	//	隧道复用的id
+	optional uint64 web_req_id = 23;		//	webui的标识
+	optional uint64 reg_req_id = 24;		//	注册服务的标识
+	optional uint64 httpport_req_id = 25;	//	httpport的标识
+    optional uint64 oprtproxy_req_id = 26;  //  oprtporxy的标识
+    optional uint64 oprtdisp_req_id = 27;   //  oprtdisp的标识
+	optional uint64 legwork_req_id = 28;
+	optional uint64 permit_req_id = 29;
+	optional uint64 messageproxy_req_id = 30; 	//messageproxy的标识
+//srv  optional uint64 pack_id = 50;      //服务端查bug用，已经用srv注释掉了。客户端不关注
+	//BEGIN: access related
+	optional uint64 acc_conn_id = 51;       //  Access Connection ID
+	optional uint64 tmp_acc_conn_id = 52;   //  accesspoint端向accesswrk端请求建立逻辑连接时,需要先带上一个tmpConnId来标记自己(回包会被替换成accesswrk统一分配的accConnId)
+	//END
+};
+
+message PB_SrvHead
+{
+	required uint32 		srvop = 1;				//	服务操作码
+	optional uint32 		flag = 2;				//  服务操作标志位，暂不使用
+	optional PB_ModMsgId	mmid = 3;				//	消息的模块身份标识，每个模块都可设置，回复时携带
+	optional int64 			from_did = 4;			//  消息发送者所在域（公司）的id
+	optional int64 			from_pid = 5;			//	消息发送者的用户id
+	optional int64 			to_did = 6;				//	消息接受者所在域的id
+	optional int64 			to_pid = 7;				//	消息接受者的用户id
+	optional int32			err_no = 8 [default=0];	//	有值表示出错了，值指定了错误信息。
+	optional string 		session = 9;		//	web用的session
+};

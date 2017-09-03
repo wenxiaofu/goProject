@@ -28,6 +28,11 @@ http://blog.csdn.net/easy_mind/article/details/52778793
 http://shanshanpt.github.io/2016/05/03/go-protobuf.html
 
 环境配置
+go get -u github.com/golang/protobuf/proto
+go get -u github.com/golang/protobuf/protoc-gen-go
 1 查看gopath中是否有protoc-gen-go.exe
 --go_out: protoc-gen-go: 文件名、目录名或卷标语法不正确。代表protoc-gen-go路径没有配置正确
 protoc.exe  --plugin=protoc-gen-go=E:\go\bin\protoc-gen-go.exe --go_out=. *.proto
+
+公司电脑
+protoc.exe  --plugin=protoc-gen-go=C:\Users\acc\goproject\src\bin\protoc-gen-go.exe --go_out=. *.proto

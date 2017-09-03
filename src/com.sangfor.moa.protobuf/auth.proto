@@ -1,0 +1,354 @@
+﻿syntax = "proto2";
+import  "common.proto";
+import  "contact.proto";
+//import  "encrypt.proto";
+package com.sangfor.moa.protobuf;
+
+enum PB_EntryIpType
+{
+    PBEIT_SECOND = 0;           // 普通接入ip
+    PBEIT_MASTER = 1;           // 主接入ip
+}
+
+message PB_EntryIp
+{   
+    optional int32 type = 1;  // 如果不存在或者后续新增的不识别类型都为 PBEIT_SECOND
+    optional string ip = 2;    //具体的ip
+}
+
+message PB_EntryIpPool
+{
+    optional int32 version = 1;     // 接入IP版本
+    repeated PB_EntryIp ips = 2;    // ip列表
+}
+
+message PB_AthLoginReq
+{
+	required string domain_name = 1;								//	域名（已废弃：为了兼容老版本，该字段保留，填空串即可，服务端将忽略内容--2014-06-03）
+	required string login_account = 2;								//	登录用户名(手机号)
+	required string client_version = 3;								//	客户端版本号
+	optional PB_ClientDevType cdt = 4 [default = PBCDT_ANDROID];
+	optional int64	did = 5;	//	要登录的公司did，客户端不用填。
+    optional string unique_code = 6;  // 添加一个唯一码，用于识别客户端是否是同一台设备登陆
+    optional string device_info = 7;      // 设备信息，目前用于存储手机型号
+    optional int32  ip_pool_ver = 8;              //ip池的版本号，不设置无效，设置版本低于服务器版本的时候 返回ip池
+    optional string android_unique_flag = 9;      // 安卓app校验码
+    optional string client_system = 10;           // 客户端系统版本情况
+};
+
+enum PB_AthAlgorithm
+{
+	PBALGO_NONE = 0;		//	明文密码
+	PBALGO_AES = 1;			//	采用aes算法加密挑战种子
+}
+
+enum PB_AthUpdateType
+{
+    PBUPDATE_ORDINARY = 0;
+    PBUPDATE_EMERGENCY = 1;
+}
+
+message PB_AthLoginRsp
+{
+	optional int32	result = 1;				//	登录结果，若有值且为负数，则表示服务端拒绝登录。
+	optional string server_version = 2;		//	服务端版本号
+	optional bytes  auth_seed = 3;			//	认证种子，客户端需要使用对应认证算法对种子进行加密,内容是一个string类型
+	optional PB_AthAlgorithm  auth_algo = 4 [default = PBALGO_NONE]; // 采用的认证算法
+	optional string latest_client_ver = 5;  //	客户端最新版本号
+	optional string update_url = 6;	    //	版本更新下载地址
+	repeated string update_info = 7;    //	客户端版本更新信息
+    repeated string ips = 8;            // 当前服务器不可用的错误时候，返回重连的ip列表
+    optional int32 update_type = 9;//客户端更新版本号情况
+    optional PB_EntryIpPool ip_pool = 10;     // 检测ip池版本低的时候返回
+	
+	optional int32 need_captcha = 11; 			//需要验证码登录的方式
+}
+
+message PB_AthAuthReq
+{
+	//optional string domain_name = 1;	//	登录域名。这个消息中客户端不用设置这个字段，后台交互使用(该字段已废弃--2014-06-03)
+	optional string login_account = 2;	//	登录用户名。这个消息中客户端不用设置这个字段，后台交互使用(该字段已废弃--2014-06-03)
+	optional bytes  encrypt_data=3;		//	对种子数据使用密码加密后的数据
+	optional int64	did = 4;			//	公司id，客户端不需要设置该字段，后台交互使用(2014-06-05)
+//srv	optional int32 captcha = 5;		//  填写验证码,设置过代表有验证码标记
+
+	optional bytes web_nonce = 6;		// web 传来的nonce,encrypt_data 是用加密后的
+}
+
+message PB_AthAuthRsp
+{
+	optional int32  result = 1;			//	认证结果。值为负数说明认证失败
+	optional int64  did = 2;			//	服务端返回该用户所在公司的did
+	optional int64  pid = 3;			//	服务端返回该用户自身的pid
+	optional bytes  ticket = 4;			//	返回票据。凭该票据，客户端在一定的时间范围内可以免登录。
+	optional PB_AthWebStatus web_status = 5; // app端会返回web端的状态
+	
+	optional string domain_name = 6;		//	用户绑定的公司名(2014-06-03添加)
+	optional PB_PidType	ptype = 7;			//	用户帐号类型(2014-06-03添加)
+    optional int64  server_time = 8;       // 当前服务器时间,格林威治时间毫秒
+    optional uint32 sheet_status = 9;      // 控制登录之后的表单展现，此次为强制密码设置的状态（0x00000001）。
+                                           //所以客户端用sheet_status位与0x00000001如果是0x00000001，则不需要强制设置密码,(2104-10-11)
+    repeated string ips = 10;            // 当前服务器不可用的错误时候，返回重连的ip列表, add 2016/4/20 私有云重定向，激活用户的时候需要在匹配密码之后才能知道链接到哪里
+//srv	optional int32 captcha = 11;									//  返回验证码
+    optional int32  is_private_cloud = 12;        //返回当前登陆是不是私有云, 1表示私有云，其他公有云
+//srv    optional string  web_crypt = 13;            //web认证登陆后，返回的pc版加密秘钥
+}
+
+//【短信验证，也需要经过login才进行这里】
+message PB_AthAuthCaptchaReq
+{
+	optional string login_account = 1;		//	登录用户名
+	optional string captcha = 2;			//  填写验证码
+}
+
+message PB_AthAuthCaptchaRsp
+{
+	optional int32  result = 1;			//	认证结果。值为负数说明认证失败
+	optional int64  did = 2;			//	服务端返回该用户所在公司的did
+	optional int64  pid = 3;			//	服务端返回该用户自身的pid
+	optional bytes  ticket = 4;			//	返回票据。凭该票据，客户端在一定的时间范围内可以免登录。
+	optional PB_AthWebStatus web_status = 5; // app端会返回web端的状态
+	
+	optional string domain_name = 6;		//	用户绑定的公司名
+	optional PB_PidType	ptype = 7;			//	用户帐号类型
+    optional int64  server_time = 8;       // 当前服务器时间,格林威治时间毫秒
+    optional uint32 sheet_status = 9;      // 控制登录之后的表单展现，此次为强制密码设置的状态（0x00000001）。
+                                           //所以客户端用sheet_status位与0x00000001如果是0x00000001，则不需要强制设置密码,(2104-10-11)
+    repeated string ips = 10;            // 当前服务器不可用的错误时候，返回重连的ip列表, add 2016/4/20 私有云重定向，激活用户的时候需要在匹配密码之后才能知道链接到哪里
+
+    optional int32  is_private_cloud = 11;        //返回当前登陆是不是私有云, 1表示私有云，其他公有云
+//srv    optional string  web_crypt = 12;            //web认证登陆后，返回的pc版加密秘钥
+}
+
+// 找回密码所有操作公用的结构，具体的操作体现在sreverhead->srvop 里面
+/* 废弃了domain_name 和 phone字段 */
+/* 登录操作的时候，填写 login_accout 字段 */
+/* 验证码的时候， 填写 login_account ， captcha 字段*/
+/* 重发验证码的时候，填写 login_account */
+/* 修改密码的时候，填写 login_account 和 new_password */
+/* 获取选择公司的密码，填写 login_account 和 did */
+message PB_AthFindPasswordReq				
+{
+	required string login_account = 1;								//	登录用户名(手机号)
+	optional int64 did = 2;											//  公司did
+	optional string captcha = 3;									//  填写验证码
+	optional bytes new_password = 4;								//  新密码
+    optional string unique_code = 5;  //ADD 2016-06-23，用于APP内部找回密码踢用户的时候不踢自己的处理,设备唯一码和登陆一致，内部找回密码设置
+	optional int32 inc_captcha = 6;									// 增强的验证码,填1表示启用6位验证码
+}
+
+message PB_AthFindPasswordDomainInfo
+{	
+	required int64 did = 1;
+	optional string dname = 2;
+	optional int64 admin_pid = 3;
+	optional string admin_name = 4;
+}
+
+message PB_AthFindPasswordRsp
+{
+	optional int32 result = 1;				//结果
+	repeated PB_AthFindPasswordDomainInfo domains = 2;			//result为需要激活公司的时候，附带
+	repeated string ips = 3;									// 当前服务器不可用的时候，返回重连ip的列表
+}
+
+enum PB_AthWebStatus
+{
+	AWS_OFFLINE = 0;
+	AWS_ONLINE = 1;
+}
+
+message PB_AthModifyPasswordReq
+{
+	optional int64 did = 1;				//	不填则选择消息发送者自身did(已废弃，单纯pid标识--2014-06-03)
+	optional int64 pid = 2;				//	不填则选择消息发送者自身pid
+	required bytes old_password = 3;	//	老密码
+	required bytes new_password = 4;	//	新密码
+}
+
+message PB_AthModifyPasswordRsp
+{
+	optional int32 result = 1;			//	返回结果。 值为负数则出错。
+}
+
+
+message PB_AthVerifyTicketReq
+{
+	required int64  did = 1;						//	服务端返回该用户所在公司的did
+	required int64  pid = 2;						//	服务端返回该用户自身的pid
+	optional PB_ClientDevType cdt = 3 [default = PBCDT_ANDROID];
+	required bytes ticket = 4;						//  未开启加密的时候是ticket即可，开启机密后是通过加密算法对encrypt_data加密后的结果
+	optional string client_version = 5;				//	客户端版本号
+	optional bytes encrypt_data = 6;				//  加密前的内容
+    optional string unique_code = 7;                //  登陆的时候添加设备唯一码
+    optional string device_info = 8;      // 设备信息，目前用于存储手机型号
+    optional int32  ip_pool_ver = 9;              //ip池的版本号，不设置无效，设置版本低于服务器版本的时候 返回ip池
+    optional string android_unique_flag = 10;      // 安卓app校验码
+    optional string client_system = 11;           // 客户端系统版本情况
+}
+
+message PB_AthVerifyTicketRsp
+{
+	optional int32 result = 1;			//	校验结果。若该字段有值并且小于0，表示出错；其它情况表示成功
+	optional int64 did = 2;				//	域did。该字段不会返回给客户端，客户端忽略。
+	optional int64 pid = 3;				//	用户pid。该字段不会返回给客户端，客户端忽略。
+	optional string domain_name = 4;	//	登录域名。该字段不会返回给客户端，客户端忽略。
+	optional string login_account = 5;	//	登录用户名。该字段不会返回给客户端，客户端忽略。
+	optional bytes ticket = 6;			//	新的ticket。若老的ticket有效时间快到期了，则会产生新的ticket给客户端，客户端应该保存新的ticket，后面使用新的ticket。
+	optional string latest_client_ver = 7;  //客户端最新版本号
+	optional string update_url = 8;	    //版本更新下载地址
+	repeated string update_info = 9;    //客户端版本更新信息
+	optional PB_AthWebStatus web_status = 10; // app端会返回web端的状态
+	
+	optional PB_PidType		ptype = 11;	//	用户帐号类型(2014-06-03添加)
+	optional string server_version = 12;		//	服务端版本号(2014-06-12添加)
+    repeated string ips = 13;               // 当前服务器不可用的时候，返回重连ip的列表
+    optional int64  server_time = 14;       // 当前服务器时间,格林威治时间毫秒
+    optional uint32 sheet_status = 15;      // 控制登录之后的表单展现，此次为强制密码设置的状态（0x00000001）,(2104-10-11)
+    optional int32 update_type = 16;//客户端更新版本号情况
+    optional PB_EntryIpPool ip_pool = 17;     // 检测ip池版本低的时候返回
+    optional int32  is_private_cloud = 18;        //返回当前登陆是不是私有云, 1表示私有云，其他公有云
+//srv    optional string  web_crypt = 19;            //web认证登陆后，返回的pc版加密秘钥
+}
+
+message PB_AthLogoutReq
+{
+//	optional string domain_name = 1;	//	注销的域名。这个消息中客户端不用设置这个字段，后台交互使用(已废弃--2014-06-03)
+	optional string login_account = 2;	//	注销的用户名。这个消息中客户端不用设置这个字段，后台交互使用(已废弃--2014-06-03)
+	optional PB_ClientDevType cdt = 3 [default = PBCDT_ANDROID];
+	optional int64	did = 4;			//	公司id，客户端不需要设置该字段，后台交互使用(2014-06-05)
+}
+
+message PB_AthLogoutRsp
+{
+	optional int32 result = 1;			//	操作结果。有值且小于0为失败，其余为成功。
+}
+
+
+message PB_AthGetPidsResult
+{
+	required string login_account = 1;	/* 登录账号*/
+	optional int64 pid = 2;				/* 如果存在返回对应的pid */
+}
+
+message PB_AthGetPidsReq
+{
+	optional int64 did = 1;
+	//optional string domain_name = 2;	//(已废弃--2014-06-03)
+	repeated string login_accounts = 3;
+}
+
+message PB_AthGetPidsRsp
+{
+	optional int32 result = 1;
+	repeated PB_AthGetPidsResult results = 2;
+}
+
+// version update check
+message PB_AthVersionUpdateReq
+{
+	optional PB_ClientDevType cdt = 1 [default = PBCDT_ANDROID];    // 设备类型
+	required string client_version = 2;								// 客户端版本号
+    optional string client_system = 3;           // 客户端系统版本情况
+}
+
+message PB_AthVersionUpdateRsp
+{
+	required int32 result = 1;              //若请求失败，这里赋值为对应的错误号，请求成功，则返回0
+	optional string latest_client_ver = 2;  //客户端最新版本号，若不为空，则表示客户端需要更新，此值为最新版本号
+	optional string update_url = 3;	        //版本更新下载地址，若不为空，则表示客户端需要更新，此值为更新url
+	repeated string update_info = 4;        //客户端版本更新信息
+    optional int32 update_type = 5;//客户端更新版本号情况
+    optional string server_version = 6;		//	服务端版本号(2015-12-23添加)
+}
+
+/* WebStatusPush  status = 0 表示不在线 1 表示在线 */
+message PB_AthWebStatusPush
+{
+	required PB_AthWebStatus status = 1;
+}
+
+message PB_AthKickWebReq
+{
+	optional int64 did = 1; /* 一般取from_did.*/
+	optional int64 pid = 2;	/* 没有取 from_pid 只有超级用户才能踢别人,否则只能提自己 */
+}
+message PB_AthKickWebRsp
+{
+	optional int32 result = 1;
+}
+
+//客户端活跃消息（没有应答，统计用户活跃度）
+message PB_AthActiveMsg
+{
+	optional int64 did = 1;		//公司域id，不携带时取PBSrvHead里的from_did
+	optional int64 pid = 2;		//用户id，不携带时取PBSrvHead里的from_pid
+}
+/* 校验密码，主要用于登陆后，或者其他地方来校验再次输入的密码*/
+message PB_AthCheckPasswordReq
+{
+    optional int64 did = 1;         // 公司id，不携带时取PBSrvHead里的from_did
+    optional int64 pid = 2;         //用户id，不携带时取PBSrvHead里的from_pid
+	optional string account = 4;	//用户帐号
+    optional bytes password = 3;    //密码用MD5SUM描述
+}
+message PB_AthCheckPasswordRsp
+{
+    optional int32 result = 1;
+	optional int64 pid = 2;			//	若是以account校验，则会返回用户id
+}
+
+message PB_AthPwdForceModifyReq
+{
+    optional int64 did = 1;		//公司域id，不携带时取PBSrvHead里的from_did
+	optional int64 pid = 2;		//用户id，不携带时取PBSrvHead里的from_pid
+    optional bytes password = 3;  // 新的密码
+}
+
+message PB_AthPwdForceModifyRsp
+{
+    optional int32 result = 1;  //返回是否修改成功
+}
+
+//【发送验证码】
+message PB_AthCaptchaSendReq
+{
+	required string login_account = 1;								//	登录用户名(手机号)
+}
+message PB_AthCaptchaSendRsp
+{
+	optional int32 result = 1;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//  推送操作
+///////////////////////////////////////////////////////////////////////////////
+message PB_AthCancelPush				//	重复用户登录的注销推送
+{
+	optional  int64  did = 1;
+	optional  int64  pid = 2;
+	optional  int32  reason = 3;
+	optional  PB_ClientDevType cdt = 4 [default = PBCDT_ANDROID];
+	optional  int64 cancel_time = 5;
+	optional string latest_client_ver = 6;  //	客户端最新版本号
+	optional string update_url = 7;	    //	版本更新下载地址
+	repeated string update_info = 8;    //	客户端版本更新信息
+//srv optional string unique_code = 9;  //ADD 2016-06-23，用于APP内部找回密码踢用户的时候不踢自己的处理
+}
+
+enum PB_AthVersionChange
+{
+	VERSION_CHANGED = 0;    //版本需要更新
+	VERSION_UNCHANGED = 1;  //版本不需要更新
+}
+message PB_AthVersionPush          //只是当版本号发生变化时，告诉用户有变化；仅此而已
+{
+	optional  int64  change_type = 1;
+}
+
+message PB_AthIpsPush				// 当前服务器不可用的时候，返回重连ip的列表
+{
+	repeated string ips = 1;
+}
+
+

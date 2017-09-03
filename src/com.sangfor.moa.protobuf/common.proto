@@ -1,0 +1,30 @@
+syntax = "proto2";
+package com.sangfor.moa.protobuf;
+import "attachment.proto";
+
+//客户端类型
+enum PB_ClientDevType
+{
+	PBCDT_ANDROID = 0;
+	PBCDT_IOS = 1;
+	PBCDT_WP=2;
+	PBCDT_SERVER=3;
+	PBCDT_WEB=4;
+    PBCDT_IOS_ENTERPRISE = 5; // IOS新增一个版本，给企业证书的使用
+    PBCDT_ANDROID_ENTERPRISE = 6; // ANDROID新增一个版本，给企业证书的使用
+}
+
+
+//= 地理位置
+message PB_MapPostion
+{
+    optional string mapaddr = 1;                            // 地图地址描述
+    optional double lon = 2;                                // 经度
+    optional double lat = 3;                                // 纬度
+}
+
+message PB_Form
+{
+    optional string content = 1;                //表单内容，格式由客户端定
+    repeated PB_Attachment attrs = 2;           //表单附件
+}
