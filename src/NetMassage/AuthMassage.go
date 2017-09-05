@@ -46,3 +46,13 @@ func Auth2json(user string) string {
 	fmt.Println(string(jsons)) //byte[]转换成string 输出
 	return string(jsons)
 }
+
+func LoginMassage(user string, pwd string) []byte {
+	pwdb := []byte(pwd)
+	var par com_sangfor_moa_protobuf.PB_AthAuthReq
+	par.LoginAccount = proto.String(user)
+	par.EncryptData = pwdb
+	fmt.Println(par.EncryptData)
+	return BuildMassage(&par, 2, 3)
+
+}

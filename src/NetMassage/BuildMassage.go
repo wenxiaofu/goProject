@@ -43,6 +43,7 @@ func IntToBytes(n int) []byte {
 
 //16进制转10进制,现在最大是两位，直接转换
 func sixteen2t(num int32) int32 {
+	fmt.Println("---------", num/10*16+num%10)
 	return num/10*16 + num%10
 }
 
@@ -92,6 +93,6 @@ func BuildMassage(pb_context proto.Message, modelop int32, contrlop int32) []byt
 	//arr = append(arr[8:], ttb)
 	//加入第四部分
 	//copy(arrt_w[15:], cworkreport_t_b)
-	copy(arrt_w[12+len(pb_context_b):], pb_context_b)
+	copy(arrt_w[12+len(pb_serop_b):], pb_context_b)
 	return arrt_w
 }

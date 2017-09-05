@@ -1,4 +1,4 @@
-package main
+package NetMassage
 
 import (
 	//"com.sangfor.moa.protobuf"
@@ -49,7 +49,7 @@ func initmassage(pb interface{}) {
 	//return s
 }
 
-func main() {
+func mainbak() {
 	type T struct {
 		Age      *int
 		Name     string
