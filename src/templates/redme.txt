@@ -1,0 +1,7 @@
+http://www.cnblogs.com/SunshineAgain/p/5784182.html
+实现动态下拉菜单，通过ajax实现 ,传递的是json数据
+
+go使用模板template
+{}
+http://www.yiibai.com/go/go_web_programe.html
+

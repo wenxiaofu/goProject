@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<body>
+<script src="/jquery/jquery-1.11.1.min.js">
+</script>
+<style>
+.jsonclass{ width:600px; height:200px;font-size</a>:28px; font-weight:bold; text-indent:2em; text-align:left;}
+</style>
+<!--进入主页之前要初始化一下数据，下拉菜单可以不使用实时请求-->
+<form action="http://127.0.0.1:9090/login" method="post">
+测试服务器：
+<br>
+<input type="text" name="firstname" value="200.200.169.212">
+<br>
+用户数: 
+<br>
+<input type="text" name="firstname" value="1000">
+<br>
+运行次数: 
+<br>
+ <input type="text" name="lastname" value="100">
+<br>
+登录和业务比: 
+<br>
+ <input type="text" name="lastname" value="1"><font size="1.5">登录一次，发送几次业务请求</font> 
+<br>
+<!--这里通过查询数据库再显示-->
+操作码: 
+<br>
+<select id="issued_sub_key_c" name="操作码"> 
+<option value="0">工作汇报</option> 
+<option value="1">任务</option> 
+</select> 
+<br>
+服务码：
+<br>
+<select name="服务码"> 
+<option value="0">创建工作</option> 
+<option value="1">加载工作汇报列表</option> 
+</select> 
+<br>
+<!--根据前面的选择结果自动填充-->
+
+json数据：
+<br>
+<input class="jsonclass" type="text" name="firstname" value="前面选择的结果">
+<br>
+<input type="submit" value="运行">
+</form> 
+<p>下面使用ajax请求实时获取服务端的资源占用情况</p>
+<p>继续获取服务端的样本运行情况</p>
+<script>
+$(document).ready(function () {
+    $.ajax({
+        timeout: 3000,
+        async: false,
+        type: "POST",
+        url: "WareHouse.ashx",
+        dataType: "json",
+        data: {
+            warehouse: $("#issued_sub_key_c").val(),
+        },
+        success: function (data) {
+            for (var i = 0; i < data.length; i++) {
+                $("#issued_sub_key_c").append("<option>" + data[i].Name + "</option>");
+            }
+        }
+    });
+});
+</script>
+</body>
+</html>
