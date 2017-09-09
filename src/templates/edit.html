@@ -1,0 +1,24 @@
+{{define "head"}}
+<title>Edite Note</title>
+{{end}}
+
+{{define "body"}}
+<h1>Edit Note</h1>
+
+<form action="/notes/update/{{.Id}}" method="post">
+  <p>Title:<br>
+      <input type="text" name="title" value="{{.Note.Title}}"/>
+  </p>
+  <p>Description:<br>
+      <textarea rows="4" cols="50" name="description">{{.Note.Description}}</textarea>
+  </p>
+  <p>
+      <input type="submit" value="submit" />
+  </p>
+</form>
+{{end}}
+
+作者：小Q逛逛
+链接：http://www.jianshu.com/p/f8bc8e9c05d9
+來源：简书
+著作权归作者所有。商业转载请联系作者获得授权，非商业转载请注明出处。

@@ -1,8 +1,11 @@
 package main
 
 import (
+	"encoding/json" //转换成json需要
+	"fmt"
 	"github.com/gorilla/mux"
 	"html/template"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -137,9 +140,9 @@ func moa_index(w http.ResponseWriter, r *http.Request) {
 	InitRunTest.NumofUser = 100
 	InitRunTest.RunTimes = 12
 	InitRunTest.RunTimes = 1
+	//下面定义一个mapping比较好用
 	InitRunTest.Serv_op = []int32{1, 2, 3, 4, 5, 6, 7, 8, 9}
-	InitRunTest.Contrl_op = []int32{11, 23, 432}
-	InitRunTest.Jcontext = "{\"name\":\"wxf\"}"
+	fmt.Println(InitRunTest.Serv_op[1])
 	renderTemplate(w, "Moa_index", "base", InitRunTest)
 }
 
@@ -172,6 +175,44 @@ func moa_running_status_reflesh(w http.ResponseWriter, r *http.Request) {
 	renderTemplate(w, "running", "base", fleshtime)
 }
 
+func moa_get_contrlop(w http.ResponseWriter, r *http.Request) {
+	// vars := mux.Vars(r) //获取请求参数，都是键值对的形式
+	r.ParseForm()
+	fmt.Println(r.FormValue("server_op"))
+	//fmt.Println(r.PostFormValue("server_op"))
+	//需要返回一个json格式的数据
+	InitRunTest.Ip = "200.200.169.212"
+	InitRunTest.NumofUser = 100
+	InitRunTest.RunTimes = 12
+	InitRunTest.RunTimes = 1
+	//下面定义一个mapping比较好用
+	InitRunTest.Serv_op = []int32{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	InitRunTest.Contrl_op = []int32{11, 23, 432}
+	//使用ioWriteString给ajax请求返回数据
+	jsons, errs := json.Marshal(InitRunTest) //转换成JSON返回的是byte[]
+	if errs != nil {
+		fmt.Println(errs.Error())
+	}
+	fmt.Println(string(jsons))
+	io.WriteString(w, string(jsons))
+	//	renderTemplate(w, "Moa_index", "base", InitRunTest)
+}
+
+//这里只需要返回一个json格式的模板数据给客户端，需要解决那种嵌套模板的形式
+func moa_get_jcontext(w http.ResponseWriter, r *http.Request) {
+	InitRunTest.Ip = "200.200.169.212"
+	InitRunTest.NumofUser = 100
+	InitRunTest.RunTimes = 12
+	InitRunTest.RunTimes = 1
+	//下面定义一个mapping比较好用
+	InitRunTest.Serv_op = []int32{1, 2, 3, 4, 5, 6, 7, 8, 9}
+	InitRunTest.Contrl_op = []int32{11, 23, 432}
+	InitRunTest.Jcontext = "{\"myProp\": \"myValue\",\"subObj\": {\"prop\": \"value\"}};"
+	fmt.Println(InitRunTest.Jcontext)
+	io.WriteString(w, InitRunTest.Jcontext)
+	//renderTemplate(w, "Moa_index", "base", InitRunTest)
+}
+
 func main() {
 	r := mux.NewRouter().StrictSlash(false)
 	fs := http.FileServer(http.Dir("public"))
@@ -185,7 +226,8 @@ func main() {
 	r.HandleFunc("/moa", moa_index)
 	r.HandleFunc("/moa/running", moa_runnig)
 	r.HandleFunc("/moa/reflesh", moa_running_status_reflesh)
-
+	r.HandleFunc("/moa/getcontrlop", moa_get_contrlop)
+	r.HandleFunc("/moa/getJcontext", moa_get_jcontext)
 	server := &http.Server{
 		Addr:    ":9090",
 		Handler: r,

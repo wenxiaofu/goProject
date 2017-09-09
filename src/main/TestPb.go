@@ -49,6 +49,13 @@ func main() {
 		fmt.Println(errs.Error())
 	}
 	fmt.Println(string(jsonM)) //byte[]转换成string 输出
+	//jsonstring转换成pb
+	mDataj2p, err := proto.Marshal(&string(jsonM))
+	if err != nil {
+		fmt.Println("Error1: ", err)
+		return
+	}
+	fmt.Println("ddddddddd" + string(mDataj2p))
 
 	// 对数据进行编码, 注意参数是message指针
 	mData, err := proto.Marshal(&hw)

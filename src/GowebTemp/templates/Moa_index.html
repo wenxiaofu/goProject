@@ -6,8 +6,7 @@
   <a href="/notes/add">Add Note</a>
 </p>
 
-
-<script src="/jquery/jquery-1.11.1.min.js">
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js">
 </script>
 <style>
 .jsonclass{ width:600px; height:200px;font-size</a>:28px; font-weight:bold; text-indent:2em; text-align:left;}
@@ -31,48 +30,103 @@
  <input type="text" name="lastname" value="1"><font size="1.5">登录一次，发送几次业务请求</font> 
 <br>
 <!--这里通过查询数据库再显示-->
-操作码: 
+服务码: 
 <br>
-<select id="issued_sub_key_c" name="操作码"> 
-<option value="0">工作汇报</option> 
-<option value="1">任务</option> 
+<select id="issued_sub_key_c" name="服务码"> 
+ {{range $key := .Serv_op}}
+        <option value="{{$key}}">{{$key}}</option>   
+{{end}}
 </select> 
-<br>
+<button id="b01" type="button">获取操作码</button>
+<button id="b02" type="button" style="display:none">获取样本数据</button>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+{{if .Contrl_op}}
 服务码：
 <br>
 <select name="服务码"> 
-<option value="0">创建工作</option> 
-<option value="1">加载工作汇报列表</option> 
+{{range $key := .Contrl_op}}
+    <option value="{{$key}}">{{$key}}</option> 
+{{end}}
 </select> 
+<a href="/moa/getJcontext">获取服务码</a>
+{{end}}
+{{if .Jcontext}}
 <br>
 <!--根据前面的选择结果自动填充-->
-
 json数据：
 <br>
-<input class="jsonclass" type="text" name="firstname" value="前面选择的结果">
+<input class="jsonclass" type="text" name="firstname" value="{{.Jcontext}}">
+<br>
 <br>
 <input type="submit" value="运行">
+{{end}}
 </form> 
 <p>下面使用ajax请求实时获取服务端的资源占用情况</p>
 <p>继续获取服务端的样本运行情况</p>
 <script>
-$(document).ready(function () {
-    $.ajax({
-        timeout: 3000,
-        async: false,
-        type: "POST",
-        url: "WareHouse.ashx",
-        dataType: "json",
-        data: {
-            warehouse: $("#issued_sub_key_c").val(),
-        },
-        success: function (data) {
-            for (var i = 0; i < data.length; i++) {
-                $("#issued_sub_key_c").append("<option>" + data[i].Name + "</option>");
-            }
-        }
-    });
+$(document).ready(function(){
+
+
+
+
+
+
+
+  $("#b01").click(function(){
+     htmlobj=$.ajax({url:"/moa/getcontrlop",
+      data: {server_op:$("#issued_sub_key_c").val()},
+     // dataType: "json",
+      success: function(result){
+      //   alert("状态：" + result);
+          var obj = JSON.parse(result)
+          alert(obj.Ip);
+          alert(obj.Contrl_op.length);
+          //定义一个数组接收服务码
+          //使用for循环添加元素
+       //  $("button").after("{{if .Contrl_op}}服务码：<br><select name=\"服务码\"> {{range $key := .Contrl_op}}<option value=\"{{$key}}\">{{$key}}</option> {{end}}</select> <a href=\"/moa/getJcontext\">获取服务码</a>{{end}} ");  },
+       //这里实现动态添加服务码，
+       if($("#Contrl_op").length==0){
+         $("#b01").after("<br> 服务码：<br><select id=\"Contrl_op\" name=\"服务码\"></select> ");  
+        // $("#Contrl_op").after("<button id=\"b02\" type=\"button\">获取样本数据</button>")
+         document.getElementById("b02").style="display:inline";
+         for(var i=0; i<obj.Contrl_op.length; i++){ 
+        $("select").append(" <option value=\""+obj.Contrl_op[i]+"\">"+obj.Contrl_op[i]+"</option>");  
+     //    $("now").after("<option id="+obj.Contrl_op[i]+" value=\"obj.Contrl_op[0]\">"+obj.Contrl_op[i]+"</option>");
+        };
+       };
+      
+     },
+     async:false
+ });
 });
+       $("#b02").click(function(){
+          htmlobj2=$.ajax({url:"/moa/getJcontext",
+            data: {server_op:$("#issued_sub_key_c").val(),Contrl_op:$("#Contrl_op").val()},
+            success: function(result){
+                alert(result+"dddd");
+                 var mes = JSON.stringify(result, null, 4);
+                $("#b02").after("<br>json请求:<br><textarea rows=\"10\" cols=\"150\" name=\"description\">"+mes+"</textarea>")
+            }
+      })
+     });
+
+});
+
 </script>
 {{end}}
 
