@@ -35,6 +35,8 @@ func main() {
 	}
 	fmt.Println(string(jsons)) //byte[]转换成string 输出
 
+	//将json转换成对象
+
 	// 创建一个对象, 并填充字段, 可以使用proto中的类型函数来处理例如Int32(XXX)
 	//	var hw proto.Message
 	hw := com_sangfor_moa_protobuf.MyMsg{
@@ -49,22 +51,24 @@ func main() {
 		fmt.Println(errs.Error())
 	}
 	fmt.Println(string(jsonM)) //byte[]转换成string 输出
-	//jsonstring转换成pb
-	mDataj2p, err := proto.Marshal(&string(jsonM))
-	if err != nil {
-		fmt.Println("Error1: ", err)
-		return
-	}
-	fmt.Println("ddddddddd" + string(mDataj2p))
+
+	//将json转换成对象
+	var json2obj com_sangfor_moa_protobuf.MyMsg
+	err := json.Unmarshal([]byte(string(jsonM)), &json2obj)
+	fmt.Println(*json2obj.Id)
+
+	//再将json转换成的对象转化为pb
+	pbdata, err := proto.Marshal(&json2obj)
+	fmt.Println(len(pbdata))
 
 	// 对数据进行编码, 注意参数是message指针
 	mData, err := proto.Marshal(&hw)
-
+	fmt.Println(len(mData))
 	if err != nil {
 		fmt.Println("Error1: ", err)
 		return
 	}
-	fmt.Println(string(mData)) //byte[]转换成string 输出
+	fmt.Println("-----" + string(mData) + "-------") //byte[]转换成string 输出
 	// 下面进行解码, 注意参数
 	var umData com_sangfor_moa_protobuf.MyMsg
 	err = proto.Unmarshal(mData, &umData)
@@ -73,6 +77,7 @@ func main() {
 		fmt.Println("Error2: ", err)
 		return
 	}
+	//
 
 	// 输出结果
 	fmt.Println(*umData.Id, "  ", *umData.Str, "  ", *umData.Opt)

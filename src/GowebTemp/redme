@@ -1,4 +1,5 @@
 执行一下这个，获取远程库失败了的话
+如果已经有了下面的文件夹要把文件夹删除掉
 go get github.com/gorilla/pat
 
 
