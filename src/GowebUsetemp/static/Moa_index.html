@@ -1,0 +1,107 @@
+{{define "head"}}<title>Add Note</title>{{end}}
+
+{{define "body"}}
+<h1>Notes List</h1>
+<p>
+  <a href="/notes/add">Add Note</a>
+</p>
+<!--<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js">
+</script>-->
+
+<script src="http://libs.baidu.com/jquery/1.9.1/jquery.min.js"></script>
+<style>
+.jsonclass{ width:600px; height:200px;font-size</a>:28px; font-weight:bold; text-indent:2em; text-align:left;}
+</style>
+<!--进入主页之前要初始化一下数据，下拉菜单可以不使用实时请求-->
+<form action="/moa/running" method="post">
+测试服务器：
+<br>
+<input type="text" name="server_ip" value="{{.Ip}}">
+<br>
+用户数: 
+<br>
+<input type="text" name="NumofUser" value="{{.NumofUser}}">
+<br>
+运行次数: 
+<br>
+ <input type="text" name="times" value="100">
+<br>
+登录和业务比: 
+<br>
+ <input type="text" name="retatime" value="1"><font size="1.5">登录一次，发送几次业务请求</font> 
+<br>
+<!--这里通过查询数据库再显示-->
+服务码: 
+<br>
+<select id="issued_sub_key_c" name="server_op"> 
+ {{range $key := .Serv_op}}
+        <option value="{{$key}}">{{$key}}</option>   
+{{end}}
+</select> 
+<button id="b01" type="button">获取操作码</button>
+<button id="b02" type="button" style="display:none">获取样本数据</button>
+</form> 
+<p>下面使用ajax请求实时获取服务端的资源占用情况</p>
+<p>继续获取服务端的样本运行情况</p>
+
+<script type="text/javascript">
+
+  var message = AwesomeMessage.create({ awesomeField: "AwesomeString" });
+  var buffer = AwesomeMessage.encode(message).finish();
+  try {
+  var decodedMessage = AwesomeMessage.decode(buffer);
+} catch (e) {
+    if (e instanceof protobuf.util.ProtocolError) {
+      // e.instance holds the so far decoded message with missing required fields
+    } else {
+      // wire format is invalid
+    }
+}
+</script>
+<script>
+$(document).ready(function(){
+  $("#b01").click(function(){
+     htmlobj=$.ajax({url:"/moa/getcontrlop",
+      data: {server_op:$("#issued_sub_key_c").val()},
+     // dataType: "json",
+      success: function(result){
+      //   alert("状态：" + result);
+          var obj = JSON.parse(result)
+    //      alert(obj.Contrl_op.length);
+          //定义一个数组接收服务码
+          //使用for循环添加元素
+       //  $("button").after("{{if .Contrl_op}}服务码：<br><select name=\"服务码\"> {{range $key := .Contrl_op}}<option value=\"{{$key}}\">{{$key}}</option> {{end}}</select> <a href=\"/moa/getJcontext\">获取服务码</a>{{end}} ");  },
+       //这里实现动态添加服务码，
+       if($("#Contrl_op").length==0){
+         $("#b01").after("<br> 服务码：<br><select id=\"Contrl_op\" name=\"服务码\"></select> ");  
+        // $("#Contrl_op").after("<button id=\"b02\" type=\"button\">获取样本数据</button>")
+         document.getElementById("b02").style="display:inline";
+         for(var i=0; i<obj.Contrl_op.length; i++){ 
+        $("select").append(" <option value=\""+obj.Contrl_op[i]+"\">"+obj.Contrl_op[i]+"</option>");  
+     //    $("now").after("<option id="+obj.Contrl_op[i]+" value=\"obj.Contrl_op[0]\">"+obj.Contrl_op[i]+"</option>");
+        };
+       };
+      
+     },
+     async:false
+ });
+});
+       $("#b02").click(function(){
+          htmlobj2=$.ajax({url:"/moa/getJcontext",
+            data: {server_op:$("#issued_sub_key_c").val(),Contrl_op:$("#Contrl_op").val()},
+            success: function(result){
+               if($("#jsonr").length==0){ 
+                //alert(result+"dddd");
+                 var mes = JSON.stringify(result, null, 4);
+                $("#b02").after("<br>json请求:<br><textarea id=\"jsonr\" rows=\"10\" cols=\"150\" name=\"description\">"+mes+"</textarea>")
+                $("#jsonr").after("<br><br><input type=\"submit\" value=\"运行\">")};
+               
+            }
+      })
+     });
+
+});
+
+</script>
+{{end}}
+

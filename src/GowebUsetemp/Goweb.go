@@ -32,11 +32,11 @@ func init() {
 		templates = make(map[string]*template.Template)
 	}
 	//了解template.Musthttp://www.jianshu.com/p/bee02c18b221
-	templates["index"] = template.Must(template.ParseFiles("templates/index.html", "templates/base.html"))
-	templates["add"] = template.Must(template.ParseFiles("templates/add.html", "templates/base.html"))
-	templates["edit"] = template.Must(template.ParseFiles("templates/edit.html", "templates/base.html"))
-	templates["Moa_index"] = template.Must(template.ParseFiles("templates/Moa_index.html", "templates/base.html"))
-	templates["running"] = template.Must(template.ParseFiles("templates/running.html", "templates/base.html"))
+	templates["index"] = template.Must(template.ParseFiles("static/getnotes.html", "static/base.html"))
+	templates["add"] = template.Must(template.ParseFiles("static/add.html", "static/base.html"))
+	templates["edit"] = template.Must(template.ParseFiles("static/edit.html", "static/base.html"))
+	templates["Moa_index"] = template.Must(template.ParseFiles("static/Moa_index.html", "static/base.html"))
+	templates["running"] = template.Must(template.ParseFiles("static/running.html", "static/base.html"))
 }
 
 //这里的viewModel就是传输的数据
@@ -53,8 +53,10 @@ func renderTemplate(w http.ResponseWriter, name string, template string, viewMod
 }
 
 func getNotes(w http.ResponseWriter, r *http.Request) {
-
 	renderTemplate(w, "index", "base", noteStore)
+	//t, _ := template.ParseFiles("static/index.html")
+	//t.Execute(w, nil)
+	//renderTemplate(w, "index", "base", noteStore)
 }
 
 func addNote(w http.ResponseWriter, r *http.Request) {
@@ -70,7 +72,7 @@ func saveNote(w http.ResponseWriter, r *http.Request) {
 
 	k := strconv.Itoa(id)
 	noteStore[k] = note
-	http.Redirect(w, r, "/", 302)
+	http.Redirect(w, r, "/getNotes", 302)
 }
 
 func editNote(w http.ResponseWriter, r *http.Request) {
@@ -102,7 +104,7 @@ func updateNote(w http.ResponseWriter, r *http.Request) {
 	} else {
 		http.Error(w, "Could not find the resource to edit,", http.StatusBadRequest)
 	}
-	http.Redirect(w, r, "/", 302)
+	http.Redirect(w, r, "/getNotes", 302)
 }
 
 func deleteNote(w http.ResponseWriter, r *http.Request) {
@@ -115,7 +117,7 @@ func deleteNote(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Could not find the resource to edit,", http.StatusBadRequest)
 	}
 
-	http.Redirect(w, r, "/", 302)
+	http.Redirect(w, r, "/getNotes", 302)
 }
 
 type RunTest struct {
@@ -166,7 +168,7 @@ func moa_runnig(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.FormValue("NumofUser"))
 	fmt.Println(r.FormValue("times"))
 	fmt.Println(r.FormValue("retatime"))
-	fmt.Println(r.FormValue(key))
+	//fmt.Println(r.FormValue(key))
 
 	//实时返回运行
 	renderTemplate(w, "running", "base", "Runningdata")
@@ -221,10 +223,42 @@ func moa_get_jcontext(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-	r := mux.NewRouter().StrictSlash(false)
-	fs := http.FileServer(http.Dir("public"))
-	r.Handle("/public/", fs)
-	r.HandleFunc("/", getNotes)
+	//http.Handle("/css/", http.FileServer(http.Dir("html")))
+
+	// mux := http.NewServeMux()
+	// 	mux.Handle("/", HttpHander{})
+	// 	//获取当前路径
+	// 	wd, err := os.Getwd()
+	// 	if err != nil {
+	// 		log.Fatalln(err)
+	// 	}
+	// 	//func StripPrefix(prefix string, h Handler) Handler
+	// 	// 给定url 删除前缀
+	// 	mux.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir(wd))))
+
+	// 	http.HandleFunc("/", sayHello)
+	// 	http.ListenAndServe(":8080", mux)
+
+	// }
+
+	r := http.NewServeMux()
+	// wd, err := os.Getwd()
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+	// //func StripPrefix(prefix string, h Handler) Handler
+	// // 给定url 删除前缀
+	// //r.Handle("/css/", http.StripPrefix("/css", http.FileServer(http.Dir(wd))))
+	// r.Handle("/static/", http.StripPrefix("/static", http.FileServer(http.Dir(wd))))
+	r.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir("./static"))))
+	r.Handle("/css/", http.StripPrefix("/css", http.FileServer(http.Dir("./static/css"))))
+	r.Handle("/js/", http.StripPrefix("/js", http.FileServer(http.Dir("./static/js"))))
+	r.Handle("/fonts/", http.StripPrefix("/fonts", http.FileServer(http.Dir("./static/fonts"))))
+	r.Handle("/images/", http.StripPrefix("/images", http.FileServer(http.Dir("./static/images"))))
+	// r := mux.NewRouter().StrictSlash(false)
+	// fs := http.FileServer(http.Dir("public"))
+	// r.Handle("/public/", fs)
+	r.HandleFunc("/getNotes", getNotes)
 	r.HandleFunc("/notes/add", addNote)
 	r.HandleFunc("/notes/save", saveNote)
 	r.HandleFunc("/notes/edit/{id}", editNote)

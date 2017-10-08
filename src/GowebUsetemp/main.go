@@ -32,11 +32,11 @@ func init() {
 		templates = make(map[string]*template.Template)
 	}
 	//了解template.Musthttp://www.jianshu.com/p/bee02c18b221
-	templates["index"] = template.Must(template.ParseFiles("templates/index.html", "templates/base.html"))
-	templates["add"] = template.Must(template.ParseFiles("templates/add.html", "templates/base.html"))
-	templates["edit"] = template.Must(template.ParseFiles("templates/edit.html", "templates/base.html"))
-	templates["Moa_index"] = template.Must(template.ParseFiles("templates/Moa_index.html", "templates/base.html"))
-	templates["running"] = template.Must(template.ParseFiles("templates/running.html", "templates/base.html"))
+	templates["index"] = template.Must(template.ParseFiles("html/index.html", "html/base.html"))
+	templates["add"] = template.Must(template.ParseFiles("html/add.html", "html/base.html"))
+	templates["edit"] = template.Must(template.ParseFiles("html/edit.html", "html/base.html"))
+	templates["Moa_index"] = template.Must(template.ParseFiles("html/Moa_index.html", "html/base.html"))
+	templates["running"] = template.Must(template.ParseFiles("html/running.html", "html/base.html"))
 }
 
 //这里的viewModel就是传输的数据
@@ -53,8 +53,9 @@ func renderTemplate(w http.ResponseWriter, name string, template string, viewMod
 }
 
 func getNotes(w http.ResponseWriter, r *http.Request) {
-
-	renderTemplate(w, "index", "base", noteStore)
+	t, _ := template.ParseFiles("view/index.html")
+	t.Execute(w, nil)
+	//renderTemplate(w, "index", "base", noteStore)
 }
 
 func addNote(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +167,7 @@ func moa_runnig(w http.ResponseWriter, r *http.Request) {
 	fmt.Println(r.FormValue("NumofUser"))
 	fmt.Println(r.FormValue("times"))
 	fmt.Println(r.FormValue("retatime"))
-	fmt.Println(r.FormValue(key))
+	//fmt.Println(r.FormValue(key))
 
 	//实时返回运行
 	renderTemplate(w, "running", "base", "Runningdata")
@@ -221,9 +222,14 @@ func moa_get_jcontext(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	//http.Handle("/css/", http.FileServer(http.Dir("html")))
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("./static")))) // 启动静态文件服务
 	r := mux.NewRouter().StrictSlash(false)
-	fs := http.FileServer(http.Dir("public"))
+	fs := http.FileServer(http.Dir("GowebUsetemp/css"))
+
 	r.Handle("/public/", fs)
+	r.Handle("/css/", fs)
+	r.Handle("/static/css/", fs)
 	r.HandleFunc("/", getNotes)
 	r.HandleFunc("/notes/add", addNote)
 	r.HandleFunc("/notes/save", saveNote)
@@ -236,7 +242,7 @@ func main() {
 	r.HandleFunc("/moa/getcontrlop", moa_get_contrlop)
 	r.HandleFunc("/moa/getJcontext", moa_get_jcontext)
 	server := &http.Server{
-		Addr:    ":9090",
+		Addr:    ":9091",
 		Handler: r,
 	}
 	log.Println("Listening...")
